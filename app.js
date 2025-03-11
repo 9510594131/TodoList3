@@ -113,6 +113,42 @@ app.post('/todos', async (req, res) => {
   }
 });
 
+app.post('/todos/:id/delete', async (req, res) => {
+  if (!req.session.userId) {
+    return res.status(401).send('Unauthorized');
+  }
+
+  try {
+    await Todo.deleteOne({ _id: req.params.id, userId: req.session.userId });
+    res.redirect('/todos');
+  } catch (error) {
+    console.error('Error deleting todo:', error);
+    res.status(500).send('Server error');
+  }
+});
+
+app.post('/todos/:id/edit', async (req, res) => {
+  if (!req.session.userId) {
+    return res.status(401).send('Unauthorized');
+  }
+
+  const { text } = req.body;
+
+  try {
+    const todo = await Todo.findOne({ _id: req.params.id, userId: req.session.userId });
+    if (!todo) {
+      return res.status(404).send('Todo not found');
+    }
+
+    todo.text = text;
+    await todo.save();
+    res.redirect('/todos');
+  } catch (error) {
+    console.error('Error editing todo:', error);
+    res.status(500).send('Server error');
+  }
+});
+
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`Server is running  http://localhost:${PORT}`);

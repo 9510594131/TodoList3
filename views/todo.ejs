@@ -5,17 +5,178 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Todos</title>
     <link rel="stylesheet" href="/style.css">
+    <style>
+        body {
+            font-family: 'Roboto', sans-serif;
+            background: #F5F5F5;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start; 
+            align-items: center;
+            height: auto; 
+            margin: 0;
+            overflow-y: auto; 
+            padding: 20px;
+        }
+
+
+        h2 {
+            text-align: center;
+            color: #003366;
+            margin-bottom: 30px;
+            font-size: 36px;
+            letter-spacing: 1px;
+        }
+
+        form {
+            background: rgba(255, 255, 255, 0.9);
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1);
+            width: 90%;
+            max-width: 400px;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        #form1 {
+            background: rgba(255, 255, 255, 0.9);
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1);
+            width: 90%;
+            max-width: 400px;
+            text-align: center;
+            margin-bottom: 20px;
+            margin-left: 32px;
+        }
+
+        input[type="text"] {
+            width: 100%;
+            padding: 12px;
+            margin: 10px 0;
+            border-radius: 10px;
+            border: 1px solid #ddd;
+            font-size: 16px;
+            background-color: #fff;
+            box-sizing: border-box;
+            transition: all 0.3s ease;
+        }
+
+        input[type="text"]:focus {
+            border-color: #D4AF37;
+            box-shadow: 0 0 5px rgba(212, 175, 55, 0.8);
+            outline: none;
+        }
+
+        button {
+            width: 100%;
+            padding: 10px;
+            border: none;
+            border-radius: 10px;
+            background-color: #2E2E2E;
+            color: white;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-sizing: border-box;
+            font-weight: bold;
+            letter-spacing: 1px;
+            margin-top: 10px;
+        }
+
+        button:hover {
+            background-color: #003366;
+            transform: scale(1.05);
+        }
+
+        ul {
+            list-style-type: none;
+            padding: 0;
+            width: 90%;
+            max-width: 400px;
+            margin: 0 auto;
+        }
+
+        li {
+            background: #fff;
+            margin: 10px 0;
+            padding: 10px;
+            border-radius: 5px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding-right: 15px;
+        }
+
+        .todo-text {
+            flex-grow: 1;
+            margin-right: 10px;
+            padding: 10px;
+            background: #f9f9f9;
+            border-radius: 5px;
+            font-size: 16px;
+            word-wrap: break-word;
+        }
+
+        .buttons-container {
+            display: flex;
+            flex-direction: column; 
+            gap: 5px; 
+            align-items: center; 
+        }
+        .edit-btn {
+            padding: 5px 10px;
+            font-size: 14px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background-color: #4CAF50;
+            color: white;
+        }
+
+        .edit-btn:hover {
+            background-color: #45a049;
+            transform: scale(1.05);
+        }
+
+        .delete-btn {
+            padding: 5px 10px;
+            font-size: 14px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background-color: #ff4d4d;
+            color: white;
+        }
+
+        .delete-btn:hover {
+            background-color: #ff1a1a;
+            transform: scale(1.05);
+        }
+    </style>
 </head>
 <body>
     <h2>Your Todos</h2>
     <form action="/todos" method="POST">
         <input type="text" name="text" required>
-        <button type="submit">Add Todo</button>
+        <button type="submit" class="add-btn">Add Todo</button>
     </form>
+
     <ul>
         <% todos.forEach(todo => { %>
             <li>
-                <%= todo.text %>
+
+                <div class="buttons-container">
+                    <form action="/todos/<%= todo._id %>/edit" id="form1" method="POST" style="display:inline;">
+                        <input type="text" name="text" value="<%= todo.text %>" required>
+                        <button type="submit" class="edit-btn">Edit</button>
+                    </form>
+                    <form action="/todos/<%= todo._id %>/delete" id="form1" method="POST" style="display:inline;">
+                        <button type="submit" class="delete-btn">Delete</button>
+                    </form>
+                </div>
             </li>
         <% }) %>
     </ul>
