@@ -47,7 +47,7 @@
             width: 90%;
             max-width: 400px;
             text-align: center;
-            margin-bottom: 20px;
+            margin-bottom: 5px;
             margin-left: 32px;
         }
 
@@ -131,7 +131,7 @@
             font-size: 14px;
             border-radius: 5px;
             cursor: pointer;
-            transition: all 0.3s ease;
+            transition: all 0.1s ease;
             background-color: #4CAF50;
             color: white;
         }
@@ -146,7 +146,7 @@
             font-size: 14px;
             border-radius: 5px;
             cursor: pointer;
-            transition: all 0.3s ease;
+            transition: all 0.1s ease;
             background-color: #ff4d4d;
             color: white;
         }
@@ -160,7 +160,7 @@
 <body>
     <h2>Your Todos</h2>
     <form action="/todos" method="POST">
-        <input type="text" name="text" required>
+        <input type="text" name="text" required placeholder="Add To-Do">
         <button type="submit" class="add-btn">Add Todo</button>
     </form>
 
