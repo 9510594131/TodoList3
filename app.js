@@ -13,14 +13,42 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.static('public'));
 app.set('view engine', 'ejs');
 
-mongoose.connect(process.env.MONGODB_URI)
-  .then(() => console.log("Connected to MongoDB"))
-  .catch((err) => console.log("MongoDB connection error:", err));
+// MongoDB connection with better error handling and timeout settings
+mongoose.connect(process.env.MONGODB_URI, {
+  useNewUrlParser: true,
+  useUnifiedTopology: true,
+  serverSelectionTimeoutMS: 5000, // Timeout after 5s instead of 30s
+  socketTimeoutMS: 45000, // Close sockets after 45s of inactivity
+})
+.then(() => console.log("Connected to MongoDB"))
+.catch((err) => {
+  console.error("MongoDB connection error:", err);
+  process.exit(1);  // Exit if cannot connect to database
+});
 
+// Handle MongoDB connection errors after initial connection
+mongoose.connection.on('error', err => {
+  console.error('MongoDB connection error:', err);
+});
+
+mongoose.connection.on('disconnected', () => {
+  console.log('MongoDB disconnected. Attempting to reconnect...');
+});
+
+mongoose.connection.on('reconnected', () => {
+  console.log('MongoDB reconnected');
+});
+
+// Session configuration using environment variables
 app.use(session({
-  secret: 'your-secret-key',
+  secret: process.env.SESSION_SECRET || process.env.JWT_SECRET,  // Fallback to JWT_SECRET if SESSION_SECRET not set
   resave: false,
-  saveUninitialized: true
+  saveUninitialized: false,  // Changed to false for better security
+  cookie: {
+    secure: process.env.NODE_ENV === 'production',  // Use secure cookies in production
+    httpOnly: true,  // Protect against XSS
+    maxAge: 24 * 60 * 60 * 1000 // 24 hours
+  }
 }));
 
 app.get('/', (req, res) => {
