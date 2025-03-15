@@ -6,12 +6,28 @@ const bodyParser = require('body-parser');
 const session = require('express-session');
 const MongoStore = require('connect-mongo');
 const jwt = require('jsonwebtoken');
+const path = require('path');
 const User = require('./models/userModel'); // Corrected path
 const Todo = require('./models/todoModel'); // Corrected path
 const app = express();
 
+// Security headers
+app.use((req, res, next) => {
+  res.setHeader('Content-Security-Policy', "default-src 'self'; style-src 'self' 'unsafe-inline';");
+  next();
+});
+
+// Middleware
 app.use(bodyParser.urlencoded({ extended: true }));
-app.use(express.static('public'));
+// Serve static files from the public directory with caching headers
+app.use(express.static(path.join(__dirname, 'public'), {
+  maxAge: '1d',
+  setHeaders: (res, path) => {
+    if (path.endsWith('.css')) {
+      res.setHeader('Content-Type', 'text/css');
+    }
+  }
+}));
 app.set('view engine', 'ejs');
 
 // MongoDB connection with better error handling
