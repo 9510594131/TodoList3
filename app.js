@@ -4,6 +4,7 @@ const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
 const bodyParser = require('body-parser');
 const session = require('express-session');
+const MongoStore = require('connect-mongo');
 const jwt = require('jsonwebtoken');
 const User = require('./models/userModel'); // Corrected path
 const Todo = require('./models/todoModel'); // Corrected path
@@ -13,17 +14,17 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.static('public'));
 app.set('view engine', 'ejs');
 
-// MongoDB connection with better error handling and timeout settings
+// MongoDB connection with better error handling
 mongoose.connect(process.env.MONGODB_URI, {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
-  serverSelectionTimeoutMS: 5000, // Timeout after 5s instead of 30s
-  socketTimeoutMS: 45000, // Close sockets after 45s of inactivity
+  serverSelectionTimeoutMS: 5000,
+  socketTimeoutMS: 45000,
+  tlsAllowInvalidCertificates: false,
+  dbName: 'todolist3'
 })
 .then(() => console.log("Connected to MongoDB"))
 .catch((err) => {
   console.error("MongoDB connection error:", err);
-  process.exit(1);  // Exit if cannot connect to database
+  process.exit(1);
 });
 
 // Handle MongoDB connection errors after initial connection
@@ -39,14 +40,20 @@ mongoose.connection.on('reconnected', () => {
   console.log('MongoDB reconnected');
 });
 
-// Session configuration using environment variables
+// Session configuration using MongoStore
 app.use(session({
-  secret: process.env.SESSION_SECRET || process.env.JWT_SECRET,  // Fallback to JWT_SECRET if SESSION_SECRET not set
+  secret: process.env.SESSION_SECRET || process.env.JWT_SECRET,
   resave: false,
-  saveUninitialized: false,  // Changed to false for better security
+  saveUninitialized: false,
+  store: MongoStore.create({
+    mongoUrl: process.env.MONGODB_URI,
+    ttl: 24 * 60 * 60, // Session TTL in seconds (1 day)
+    autoRemove: 'native',
+    dbName: 'todolist3'
+  }),
   cookie: {
-    secure: process.env.NODE_ENV === 'production',  // Use secure cookies in production
-    httpOnly: true,  // Protect against XSS
+    secure: process.env.NODE_ENV === 'production',
+    httpOnly: true,
     maxAge: 24 * 60 * 60 * 1000 // 24 hours
   }
 }));
