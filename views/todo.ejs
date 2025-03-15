@@ -157,23 +157,22 @@
         }
     </style>
 </head>
-<body>
+<body class="todo-body">
     <h2>Your Todos</h2>
-    <form action="/todos" method="POST">
+    <form action="/todos" method="POST" class="todo-form">
         <input type="text" name="text" required placeholder="Add To-Do">
         <button type="submit" class="add-btn">Add Todo</button>
     </form>
 
-    <ul>
+    <ul class="todo-list">
         <% todos.forEach(todo => { %>
-            <li>
-
+            <li class="todo-item">
                 <div class="buttons-container">
-                    <form action="/todos/<%= todo._id %>/edit" id="form1" method="POST" style="display:inline;">
+                    <form action="/todos/<%= todo._id %>/edit" method="POST" class="edit-form">
                         <input type="text" name="text" value="<%= todo.text %>" required>
                         <button type="submit" class="edit-btn">Edit</button>
                     </form>
-                    <form action="/todos/<%= todo._id %>/delete" id="form1" method="POST" style="display:inline;">
+                    <form action="/todos/<%= todo._id %>/delete" method="POST" class="delete-form">
                         <button type="submit" class="delete-btn">Delete</button>
                     </form>
                 </div>

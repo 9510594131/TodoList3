@@ -18,20 +18,25 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, 'public')));
 app.set('view engine', 'ejs');
 
-// MongoDB connection with better error handling
+// MongoDB connection with optimized settings
 mongoose.connect(process.env.MONGODB_URI, {
-  serverSelectionTimeoutMS: 5000,
+  serverSelectionTimeoutMS: 10000, // Increased timeout
   socketTimeoutMS: 45000,
-  tlsAllowInvalidCertificates: false,
-  dbName: 'todolist3'
+  maxPoolSize: 10,
+  minPoolSize: 2,
+  dbName: 'todolist3',
+  retryWrites: true,
+  w: 'majority'
 })
-.then(() => console.log("Connected to MongoDB"))
+.then(() => {
+  console.log("Connected to MongoDB");
+})
 .catch((err) => {
   console.error("MongoDB connection error:", err);
   process.exit(1);
 });
 
-// Handle MongoDB connection errors after initial connection
+// Handle MongoDB connection errors
 mongoose.connection.on('error', err => {
   console.error('MongoDB connection error:', err);
 });
@@ -40,27 +45,43 @@ mongoose.connection.on('disconnected', () => {
   console.log('MongoDB disconnected. Attempting to reconnect...');
 });
 
-mongoose.connection.on('reconnected', () => {
-  console.log('MongoDB reconnected');
+mongoose.connection.on('connected', () => {
+  console.log('MongoDB connected successfully');
 });
 
-// Session configuration using MongoStore
+// Session configuration
+const sessionStore = MongoStore.create({
+  mongoUrl: process.env.MONGODB_URI,
+  collectionName: 'sessions',
+  ttl: 24 * 60 * 60,
+  autoRemove: 'native'
+});
+
 app.use(session({
-  secret: process.env.SESSION_SECRET || process.env.JWT_SECRET,
+  secret: process.env.SESSION_SECRET || process.env.JWT_SECRET || 'your-secret-key',
   resave: false,
   saveUninitialized: false,
-  store: MongoStore.create({
-    mongoUrl: process.env.MONGODB_URI,
-    ttl: 24 * 60 * 60, // Session TTL in seconds (1 day)
-    autoRemove: 'native',
-    dbName: 'todolist3'
-  }),
+  store: sessionStore,
   cookie: {
     secure: process.env.NODE_ENV === 'production',
     httpOnly: true,
     maxAge: 24 * 60 * 60 * 1000 // 24 hours
   }
 }));
+
+// Add response time middleware
+app.use((req, res, next) => {
+  res.locals.startTime = Date.now();
+  next();
+});
+
+// Add basic caching headers
+app.use((req, res, next) => {
+  if (req.url.includes('style.css')) {
+    res.setHeader('Cache-Control', 'public, max-age=86400'); // Cache for 1 day
+  }
+  next();
+});
 
 app.get('/', (req, res) => {
   res.render('login');
