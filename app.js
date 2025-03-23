@@ -19,22 +19,28 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.set('view engine', 'ejs');
 
 // MongoDB connection with optimized settings
-mongoose.connect(process.env.MONGODB_URI, {
-  serverSelectionTimeoutMS: 10000, // Increased timeout
-  socketTimeoutMS: 45000,
-  maxPoolSize: 10,
-  minPoolSize: 2,
-  dbName: 'todolist3',
-  retryWrites: true,
-  w: 'majority'
-})
-.then(() => {
-  console.log("Connected to MongoDB");
-})
-.catch((err) => {
-  console.error("MongoDB connection error:", err);
-  process.exit(1);
-});
+const connectDB = async () => {
+  try {
+    const conn = await mongoose.connect(process.env.MONGODB_URI, {
+      serverSelectionTimeoutMS: 30000, // Increased timeout
+      socketTimeoutMS: 45000,
+      maxPoolSize: 10,
+      minPoolSize: 2,
+      dbName: 'todolist3',
+      retryWrites: true,
+      w: 'majority',
+      useNewUrlParser: true,
+      useUnifiedTopology: true
+    });
+    console.log(`MongoDB Connected: ${conn.connection.host}`);
+  } catch (error) {
+    console.error('MongoDB connection error:', error);
+    // Don't exit the process, try to reconnect
+    setTimeout(connectDB, 5000);
+  }
+};
+
+connectDB();
 
 // Handle MongoDB connection errors
 mongoose.connection.on('error', err => {
@@ -43,6 +49,7 @@ mongoose.connection.on('error', err => {
 
 mongoose.connection.on('disconnected', () => {
   console.log('MongoDB disconnected. Attempting to reconnect...');
+  setTimeout(connectDB, 5000);
 });
 
 mongoose.connection.on('connected', () => {
