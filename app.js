@@ -54,7 +54,10 @@ const sessionStore = MongoStore.create({
   mongoUrl: process.env.MONGODB_URI,
   collectionName: 'sessions',
   ttl: 24 * 60 * 60,
-  autoRemove: 'native'
+  autoRemove: 'native',
+  crypto: {
+    secret: process.env.SESSION_SECRET || process.env.JWT_SECRET || 'your-secret-key'
+  }
 });
 
 app.use(session({
@@ -65,9 +68,17 @@ app.use(session({
   cookie: {
     secure: process.env.NODE_ENV === 'production',
     httpOnly: true,
-    maxAge: 24 * 60 * 60 * 1000 // 24 hours
-  }
+    maxAge: 24 * 60 * 60 * 1000, // 24 hours
+    sameSite: 'lax'
+  },
+  name: 'sessionId' // Custom session name
 }));
+
+// Error handling middleware
+app.use((err, req, res, next) => {
+  console.error(err.stack);
+  res.status(500).send('Something broke!');
+});
 
 // Add response time middleware
 app.use((req, res, next) => {
@@ -129,9 +140,15 @@ app.post('/login', async (req, res) => {
       return res.status(400).send("Invalid password");
     }
 
-    const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, { expiresIn: '1h' });
+    // Set session before redirect
     req.session.userId = user._id;
-    res.redirect('/todos'); // Redirect to /todos after successful login
+    req.session.save((err) => {
+      if (err) {
+        console.error('Session save error:', err);
+        return res.status(500).send('Session error');
+      }
+      res.redirect('/todos');
+    });
   } catch (error) {
     console.error("Error during login:", error);
     res.status(500).send('Server error');
